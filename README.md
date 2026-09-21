@@ -1,11 +1,15 @@
 # Iwos — Workforce Scheduling & Absence Management
 
+<img width="1682" height="742" alt="3" src="https://github.com/user-attachments/assets/b4c60380-2ac2-4cc1-851f-178908531a87" />
+
 A multi-tenant SaaS platform for shift-based organisations (manufacturing plants,
 clinics, logistics). It generates legally compliant shift schedules with a
 constraint solver, tracks absences against statutory leave balances, and gives
 employees a self-service portal for requests and shift swaps.
 
 **Stack:** ASP.NET Core 10 · PostgreSQL 18 · EF Core · Google OR-Tools (CP-SAT) · React 19 · Vite · Tailwind CSS 4
+
+<img width="1677" height="740" alt="1" src="https://github.com/user-attachments/assets/9f6f6c1e-19e3-47d8-bea2-8209266a5aab" />
 
 ---
 
@@ -22,6 +26,9 @@ approved absences, produce an assignment of people to shifts that:
 - gets as close as possible to the **soft objectives** (fair distribution of
   unpopular shifts, respecting stated preferences, minimising coverage gaps).
 
+<img width="1690" height="745" alt="5" src="https://github.com/user-attachments/assets/fc0722a3-716a-4f3c-9279-659513896d64" />
+
+
 `Backend/Business/Scheduling` implements this as a two-phase pipeline: a
 greedy constructive pass builds a feasible seed schedule, then either a
 [CP-SAT](https://developers.google.com/optimization/cp/cp_solver) model
@@ -29,6 +36,8 @@ greedy constructive pass builds a feasible seed schedule, then either a
 (`Optimizer/ScheduleLocalSearchOptimizer.cs`) improves it under a time budget.
 Constraints are pluggable (`Constraints/IScheduleConstraint.cs`) so a new
 labour-law rule is a single class, not a rewrite.
+
+<img width="1676" height="738" alt="2" src="https://github.com/user-attachments/assets/85ba0c82-5e79-43e2-8854-e45750f0533c" />
 
 ---
 
@@ -73,6 +82,9 @@ query cannot accidentally cross tenants.
 React 19 + Vite, no TypeScript, no global state library — state is local to
 components, navigation state lives in the URL. Two fully separated auth domains
 (manager and employee portal) with independent token stores and axios instances.
+
+<img width="1682" height="746" alt="4" src="https://github.com/user-attachments/assets/5808d29c-869f-4fb9-a8ed-91b22b8b9117" />
+
 
 ---
 
@@ -183,6 +195,9 @@ docker-compose.prod.yml + Caddyfile   Production stack
 ```
 
 ---
+
+<img width="1686" height="743" alt="7" src="https://github.com/user-attachments/assets/b952cc68-0a42-4774-9881-22be012159f4" />
+
 
 ## License
 
