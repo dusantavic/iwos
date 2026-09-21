@@ -1,0 +1,133 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Secrets — never commit. Use the *.example files as templates.
+# ──────────────────────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.local
+
+# Exception: Frontend/.env holds only local dev URLs (localhost ports), no secrets.
+# It is committed so `npm run dev` works straight after clone.
+!Frontend/.env
+
+# Local dev overrides hold connection strings / JWT keys / SMTP passwords.
+# Copy appsettings.Development.example.json -> appsettings.Development.json.
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/secrets.json
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Runtime data — user uploads are per-deployment, not source
+# ──────────────────────────────────────────────────────────────────────────────
+Backend/wwwroot/uploads/*
+!Backend/wwwroot/uploads/profiles/
+!Backend/wwwroot/uploads/thumbnails/
+Backend/wwwroot/uploads/profiles/*
+Backend/wwwroot/uploads/thumbnails/*
+!Backend/wwwroot/uploads/profiles/.gitkeep
+!Backend/wwwroot/uploads/thumbnails/.gitkeep
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Node / Vite
+# ──────────────────────────────────────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ──────────────────────────────────────────────────────────────────────────────
+# .NET
+# ──────────────────────────────────────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+artifacts/
+publish/
+project.lock.json
+project.fragment.lock.json
+*.nupkg
+*.nuget.props
+*.nuget.targets
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+
+# Build output & symbols
+*.dll
+*.exe
+*.pdb
+*.dll.config
+!/packages/*/lib/*.dll
+!/packages/*/lib/*/*.dll
+
+# Publish profiles may embed credentials
+*.pubxml
+*.publishproj
+*.azurePubxml
+*.[Pp]ublish.xml
+PublishScripts/
+
+# Test & coverage
+[Tt]est[Rr]esults/
+*.coverage
+*.coveragexml
+*.trx
+
+# ──────────────────────────────────────────────────────────────────────────────
+# IDE / tooling
+# ──────────────────────────────────────────────────────────────────────────────
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.localhistory/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.cache
+*[Rr]esharper*
+*.binlog
+_UpgradeReport_Files/
+UpgradeLog*.XML
+UpgradeLog*.htm
+
+# Claude Code / internal QA tooling — not part of the product
+.claude/
+Frontend/.claude/
+Frontend/.qa/
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Databases & logs
+# ──────────────────────────────────────────────────────────────────────────────
+*.mdf
+*.ldf
+*.ndf
+logs/
+*.log
+
+# ──────────────────────────────────────────────────────────────────────────────
+# OS
+# ──────────────────────────────────────────────────────────────────────────────
+.DS_Store
+ehthumbs.db
+Thumbs.db
+Icon?
+
+# AI assistant working notes — internal, not part of the product.
+# Remove these lines if you want them published.
+CLAUDE.md
+**/CLAUDE.md

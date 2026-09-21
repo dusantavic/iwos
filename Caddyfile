@@ -1,0 +1,18 @@
+# Caddy automatically obtains and renews Let's Encrypt certs for {$PUBLIC_HOSTNAME}.
+# Apex (iwos.app) is redirected to www to give us a single canonical origin.
+
+iwos.app {
+    redir https://{$PUBLIC_HOSTNAME}{uri} permanent
+}
+
+{$PUBLIC_HOSTNAME} {
+    encode zstd gzip
+
+    # SPA + static assets are served by the nginx container (which also proxies
+    # /api/* and /uploads/* internally to the API).
+    reverse_proxy web:80 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+        header_up X-Real-IP {remote_host}
+    }
+}

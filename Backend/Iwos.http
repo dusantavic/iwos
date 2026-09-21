@@ -1,0 +1,32 @@
+# Scratch file for hitting the API during development.
+# Values below are placeholders — never commit real credentials here.
+# Seed a demo tenant first: dotnet run --project Tools/SeedMockTenant
+
+@Iwos_HostAddress = http://localhost:5097
+@username = plant.admin
+@password = Demo#Plant2026!
+@token = {{login.response.body.$.accessToken}}
+
+# @name login
+GET {{Iwos_HostAddress}}/api/v1/Account/GetTokenForUser?username={{username}}&password={{password}}
+
+###
+
+# @name health
+GET {{Iwos_HostAddress}}/healthz
+
+###
+
+# @name registerUser
+POST {{Iwos_HostAddress}}/api/v1/Account/RegisterUser
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "test.user",
+  "firstname": "Test",
+  "lastname": "User",
+  "email": "test.user@example.com",
+  "password": "__CHANGE_ME__",
+  "clientId": "00000000-0000-0000-0000-000000000000"
+}

@@ -1,0 +1,97 @@
+# Production compose file. Run with:
+#   docker compose --env-file .env -f docker-compose.prod.yml up -d --build
+#
+# Differences vs. docker-compose.yml (which is dev/local-only):
+#   • ASPNETCORE_ENVIRONMENT=Production
+#   • All secrets sourced from .env / orchestrator env (never committed)
+#   • Postgres is on a private network, port 5432 NOT published to the host
+#   • API port 8080 NOT published; only Caddy (80/443) is public
+#   • Caddy terminates TLS and reverse-proxies SPA + /api + /uploads
+#   • Persistent named volume for backend uploads (off the container fs)
+
+version: "3.9"
+
+networks:
+  edge:    # public-facing — only the proxy lives here
+  internal: # API ↔ DB — never published
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # No `ports:` — DB is reachable only from inside the `internal` network.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: "/api/v1"
+        # Empty string → assets resolve to same-origin paths (e.g. /uploads/x.jpg)
+        # which Caddy + the api container's static-file middleware serve.
+        VITE_ASSETS_BASE_URL: ""
+    restart: unless-stopped
+    environment:
+      API_UPSTREAM: "api:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    # No `ports:` — Caddy proxies to web via internal DNS name `web`.
+    networks: [internal, edge]
+    
+  api:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile.deploy
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      # Honor X-Forwarded-* from the upstream proxy (Caddy terminates TLS for us).
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      # ── Secrets — never committed; sourced from .env ──────────────────────
+      ConnectionStrings__Db: "Server=db;Port=5432;Database=${POSTGRES_DB};User Id=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SearchPath=hrs;"
+      Application__JwtSettings__JwtSecretKey: ${APPLICATION__JWTSETTINGS__JWTSECRETKEY}
+      EmailNotificationSettings__EmailNotificationAddress: ${EMAILNOTIFICATIONSETTINGS__EMAILNOTIFICATIONADDRESS}
+      EmailNotificationSettings__EmailNotificationAddressPassword: ${EMAILNOTIFICATIONSETTINGS__EMAILNOTIFICATIONADDRESSPASSWORD}
+    depends_on:
+      - web
+    # No `ports:` — Caddy reaches the API via the internal Docker DNS name `api`.
+    volumes:
+      - uploads:/app/wwwroot/uploads
+    networks: [internal]
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      PUBLIC_HOSTNAME: ${PUBLIC_HOSTNAME}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - api
+    networks: [edge, internal]
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:

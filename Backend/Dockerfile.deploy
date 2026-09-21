@@ -1,0 +1,30 @@
+# Production-oriented Dockerfile for the API.
+# Note: project targets net10.0, so this uses .NET 10 images.
+# If you switch to net8.0 (recommended for stability), update the image tags accordingly.
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY Iwos.csproj ./
+RUN dotnet restore ./Iwos.csproj
+
+COPY . ./
+RUN dotnet publish ./Iwos.csproj -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+
+# Bind to 8080 by default (nice for ECS/ALB)
+ENV ASPNETCORE_URLS=http://+:8080 \
+    DOTNET_RUNNING_IN_CONTAINER=true \
+    ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+
+EXPOSE 8080
+
+COPY --from=build /app/publish ./
+
+# Optional: container-level healthcheck (requires /healthz route, which you already have)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:8080/healthz || exit 1
+
+ENTRYPOINT ["dotnet", "Iwos.dll"]

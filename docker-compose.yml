@@ -1,0 +1,54 @@
+# Local development compose file. NOT for production.
+# For prod use: docker compose --env-file .env -f docker-compose.prod.yml up -d --build
+version: "3.9"
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: iwos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d iwos"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      args:
+        # Same-origin API path behind nginx proxy in this compose
+        VITE_API_BASE_URL: "/api/v1"
+    environment:
+      # Used by nginx at runtime (see nginx.template.conf)
+      API_UPSTREAM: "api:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5173:80"
+  api:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile.deploy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      # Override appsettings.json connection string
+      ConnectionStrings__Db: "Server=db;Port=5432;Database=iwos;User Id=postgres;Password=postgres;SearchPath=hrs;"
+      # Throwaway key so local tokens sign correctly. NEVER use this in production —
+      # docker-compose.prod.yml sources the real key from .env instead.
+      Application__JwtSettings__JwtSecretKey: "local-dev-only-insecure-signing-key-change-me"
+    depends_on:
+      - web
+    ports:
+      - "8080:8080"
+volumes:
+  pgdata:

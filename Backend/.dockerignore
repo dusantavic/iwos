@@ -1,0 +1,38 @@
+# Secrets & local-only config — must never be baked into an image.
+**/.env
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/secrets.dev.yaml
+**/secrets.json
+**/values.dev.yaml
+
+# Runtime data — uploads belong on a volume, not in the image.
+wwwroot/uploads/
+
+# Build output
+**/bin
+**/obj
+**/node_modules
+**/npm-debug.log
+
+# VCS & editor metadata
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/.classpath
+**/.project
+**/.settings
+**/.toolstarget
+**/*.*proj.user
+**/*.dbmdl
+**/*.jfm
+
+# Not needed at build time
+**/.dockerignore
+**/Dockerfile*
+**/docker-compose*
+**/azds.yaml
+**/charts
+LICENSE
+README.md
